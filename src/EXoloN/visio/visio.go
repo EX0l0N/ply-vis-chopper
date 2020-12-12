@@ -45,12 +45,12 @@ func WriteVis(pv plyvis, out io.Writer) {
 		panic(fmt.Sprint("Unable to write vis: ", err))
 	}
 
-	for _, ri := range pv {
-		if err := binary.Write(but, binary.LittleEndian, uint32(len(ri)/4)); err != nil {
+	for i := range pv {
+		if err := binary.Write(but, binary.LittleEndian, uint32(len(pv[i])/4)); err != nil {
 			panic(fmt.Sprint("Could not write number of reference images for this point: ", err))
 		}
 
-		if _, err := but.Write(ri); err != nil {
+		if _, err := but.Write(pv[i]); err != nil {
 			panic(fmt.Sprint("Could not write image references: ", err))
 		}
 	}
