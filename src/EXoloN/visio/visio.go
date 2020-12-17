@@ -9,6 +9,15 @@ import (
 
 type plyvis [][]byte
 
+func (pv *plyvis) WritePoint(point int, w io.Writer) {
+	if err := binary.Write(w, binary.LittleEndian, uint32(len((*pv)[point])/4)); err != nil {
+		panic(fmt.Sprint("Could not write number of reference images for this point: ", err))
+	}
+	if _, err := w.Write((*pv)[point]); err != nil {
+		panic(fmt.Sprint("Could not write image references: ", err))
+	}
+}
+
 func ReadVis(in io.Reader) plyvis {
 	var vislen uint64
 
@@ -45,13 +54,7 @@ func WriteVis(pv plyvis, out io.Writer) {
 		panic(fmt.Sprint("Unable to write vis: ", err))
 	}
 
-	for i := range pv {
-		if err := binary.Write(but, binary.LittleEndian, uint32(len(pv[i])/4)); err != nil {
-			panic(fmt.Sprint("Could not write number of reference images for this point: ", err))
-		}
-
-		if _, err := but.Write(pv[i]); err != nil {
-			panic(fmt.Sprint("Could not write image references: ", err))
-		}
+	for p := range pv {
+		pv.WritePoint(p, but)
 	}
 }
