@@ -58,3 +58,16 @@ func WriteVis(pv plyvis, out io.Writer) {
 		pv.WritePoint(p, but)
 	}
 }
+
+func WriteVisList(pv plyvis, list []int, out io.Writer) {
+	but := bufio.NewWriter(out)
+	defer but.Flush()
+
+	if err := binary.Write(but, binary.LittleEndian, uint64(len(list))); err != nil {
+		panic(fmt.Sprint("Unable to write vis: ", err))
+	}
+
+	for _, p := range list {
+		pv.WritePoint(p, but)
+	}
+}
