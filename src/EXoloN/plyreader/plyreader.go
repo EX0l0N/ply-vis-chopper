@@ -172,11 +172,12 @@ type normals struct {
 }
 
 type colordata struct {
+	pos positions
 	col colors
 }
 
-func (p *colordata) has_normals() bool {
-	return false
+func (p *colordata) get_pos() *positions {
+	return &p.pos
 }
 
 func (p *colordata) get_col() *colors {
@@ -188,12 +189,13 @@ func (p *colordata) get_norm() *normals {
 }
 
 type colordata_with_normals struct {
+	pos  positions
 	col  colors
 	norm normals
 }
 
-func (pn *colordata_with_normals) has_normals() bool {
-	return true
+func (p *colordata_with_normals) get_pos() *positions {
+	return &p.pos
 }
 
 func (p *colordata_with_normals) get_col() *colors {
@@ -204,27 +206,22 @@ func (p *colordata_with_normals) get_norm() *normals {
 	return &p.norm
 }
 
-type point_data interface {
-	has_normals() bool
+type point interface {
+	get_pos() *positions
 	get_col() *colors
 	get_norm() *normals
 }
 
-type point struct {
-	pos  positions
-	data point_data
-}
-
 type pointcloud struct {
 	hasher map[positions]int
-	data   []point_data
+	points []point
 }
 
 func read_pointcloud(in *bufio.Reader, header ply_header) pointcloud {
 	var pc pointcloud
 
 	pc.hasher = make(map[positions]int)
-	pc.data = make([]point_data, int(header.num_vertices))
+	pc.points = make([]point, int(header.num_vertices))
 
 	read_float32 := func() float32 {
 		var f float32
@@ -246,49 +243,46 @@ func read_pointcloud(in *bufio.Reader, header ply_header) pointcloud {
 		return b
 	}
 
-	for c := range pc.data {
+	for c := range pc.points {
 		var p point
 
-		fmt.Println(c)
-
 		if header.has_normals {
-			p.data = new(colordata_with_normals)
+			p = new(colordata_with_normals)
 		} else {
-			p.data = new(colordata)
+			p = new(colordata)
 		}
 
 		for i := 0; i < len(header.field_order); i++ {
 			switch header.field_order[i] {
 			case REQ_X:
-				p.pos.x = read_float32()
+				p.get_pos().x = read_float32()
 			case REQ_Y:
-				p.pos.y = read_float32()
+				p.get_pos().y = read_float32()
 			case REQ_Z:
-				p.pos.z = read_float32()
+				p.get_pos().z = read_float32()
 			case REQ_RED:
-				p.data.get_col().r = read_byte()
+				p.get_col().r = read_byte()
 			case REQ_GREEN:
-				p.data.get_col().g = read_byte()
+				p.get_col().g = read_byte()
 			case REQ_BLUE:
-				p.data.get_col().b = read_byte()
+				p.get_col().b = read_byte()
 			case REQ_ALPHA:
 				if d, err := (*in).Discard(1); err != nil || d != 1 {
 					panic("Unable to discard one byte.")
 				}
 			case OPT_NX:
-				p.data.get_norm().nx = read_float32()
+				p.get_norm().nx = read_float32()
 			case OPT_NY:
-				p.data.get_norm().ny = read_float32()
+				p.get_norm().ny = read_float32()
 			case OPT_NZ:
-				p.data.get_norm().nz = read_float32()
+				p.get_norm().nz = read_float32()
 			default:
 				panic("Wrong use of field order.")
 			}
 
-			pc.hasher[p.pos] = c
-			pc.data[c] = p.data
+			pc.hasher[*p.get_pos()] = c
+			pc.points[c] = p
 		}
-		fmt.Println(p.pos, p.data)
 	}
 
 	return pc
