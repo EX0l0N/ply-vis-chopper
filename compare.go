@@ -27,7 +27,7 @@ func main() {
 	one = plyreader.ReadPLY(first)
 	two = plyreader.ReadPLY(second)
 
-	for c := 0; c < one.Elements(); c++ {
-		fmt.Println(two.GetPosition(one.GetPointAt(c)))
+	for c := 0; c < two.Elements(); c++ {
+		fmt.Println(one.GetPosition(two.GetPointAt(c)))
 	}
 }
