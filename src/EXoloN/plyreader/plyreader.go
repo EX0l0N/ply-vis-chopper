@@ -188,6 +188,11 @@ func (p *colordata) get_norm() *normals {
 	return nil
 }
 
+func (p1 colordata) equals(p point) bool {
+	p2, ok := p.(*colordata)
+	return ok && (p1 == *p2)
+}
+
 type colordata_with_normals struct {
 	pos  positions
 	col  colors
@@ -206,15 +211,40 @@ func (p *colordata_with_normals) get_norm() *normals {
 	return &p.norm
 }
 
+func (p1 colordata_with_normals) equals(p point) bool {
+	p2, ok := p.(*colordata_with_normals)
+	return ok && (p1 == *p2)
+}
+
 type point interface {
 	get_pos() *positions
 	get_col() *colors
 	get_norm() *normals
+	equals(point) bool
 }
 
 type pointcloud struct {
 	hasher map[positions]int
 	points []point
+}
+
+func (pc pointcloud) Elements() int {
+	return len(pc.points)
+}
+
+func (pc pointcloud) GetPointAt(i int) interface{} {
+	return pc.points[i]
+}
+
+func (pc pointcloud) GetPosition(p interface{}) (int, bool) {
+	if pa, ok := p.(point); ok {
+		if pos, exists := pc.hasher[*pa.get_pos()]; exists {
+			if pc.points[pos].equals(pa) {
+				return pos, true
+			}
+		}
+	}
+	return -1, false
 }
 
 func read_pointcloud(in *bufio.Reader, header ply_header) pointcloud {
