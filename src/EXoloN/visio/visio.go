@@ -9,11 +9,11 @@ import (
 
 type plyvis [][]byte
 
-func (pv *plyvis) WritePoint(point int, w io.Writer) {
-	if err := binary.Write(w, binary.LittleEndian, uint32(len((*pv)[point])/4)); err != nil {
+func (pv plyvis) WritePoint(point int, w io.Writer) {
+	if err := binary.Write(w, binary.LittleEndian, uint32(len(pv[point])/4)); err != nil {
 		panic(fmt.Sprint("Could not write number of reference images for this point: ", err))
 	}
-	if _, err := w.Write((*pv)[point]); err != nil {
+	if _, err := w.Write(pv[point]); err != nil {
 		panic(fmt.Sprint("Could not write image references: ", err))
 	}
 }
@@ -46,7 +46,7 @@ func ReadVis(in io.Reader) plyvis {
 	return vis
 }
 
-func WriteVis(pv plyvis, out io.Writer) {
+func (pv plyvis) WriteTo(out io.Writer) {
 	but := bufio.NewWriter(out)
 	defer but.Flush()
 
@@ -59,7 +59,7 @@ func WriteVis(pv plyvis, out io.Writer) {
 	}
 }
 
-func WriteVisList(pv plyvis, list []int, out io.Writer) {
+func (pv plyvis) WriteListTo(list []int, out io.Writer) {
 	but := bufio.NewWriter(out)
 	defer but.Flush()
 

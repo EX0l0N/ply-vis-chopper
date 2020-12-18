@@ -22,5 +22,5 @@ func main() {
 	}
 
 	vis := visio.ReadVis(infile)
-	visio.WriteVis(vis, outfile)
+	vis.WriteTo(outfile)
 }
