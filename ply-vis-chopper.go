@@ -44,7 +44,7 @@ func main() {
 		if newpos, exists := original.GetPosition(cropped.GetPointAt(pos)); exists {
 			positions[pos] = newpos
 		} else {
-			panic(fmt.Sprint("Point at position ", pos, "can not be found in original PLY file."))
+			panic(fmt.Sprint("Point at position ", pos, " can not be found in original PLY file."))
 		}
 	}
 
