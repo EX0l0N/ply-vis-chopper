@@ -80,8 +80,8 @@ Please note that you will need to move the original `fused` files out of the way
 ## But I WANT to compile
 
 That's ok.  
-The tool has no dependencies.  
-You just need to move make your `$GOPATH` point to the projects folder and then build.
+The ply-vis-chopper has no dependencies.  
+You just need to make your `$GOPATH` point to the projects folder and then build.
 
 This will be
 
