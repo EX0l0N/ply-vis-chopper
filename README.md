@@ -64,7 +64,7 @@ Here's an example:
 
 ```
 # generic form:
-./ply-vis-chopper <ORIGINAL-FUSED.PLY> <EDITED_FUSED.PLY> <ORIGINAL-FUSED.PLY.VIS> <TO-BE-OUPUT.PLY.VIS>
+./ply-vis-chopper <ORIGINAL-FUSED.PLY> <EDITED_FUSED.PLY> <ORIGINAL-FUSED.PLY.VIS> <OUPUT.PLY.VIS>
 
 # example invocation:
 ./ply-vis-chopper fused.ply cleaned.ply fused.ply.vis cleaned.ply.vis
