@@ -26,7 +26,7 @@ Another tool called [OpenMSV](https://github.com/cdcseacave/openMVS) is also abl
 A common problem at this stage is, that colmap has no idea if the points it was able to create belong to you model, or not.  
 Makeing the meshers work on that data will always create geometry that you don't want in your final result.
 
-That alone won't be that problematic, if only model an background would be separable in any way.
+That alone won't be that problematic, if only model and background would be separable in any way.
 Unfortunately the background noise does even have an effect on your model, as it alters surrounding normals and thus bends your models surfaces.
 
 You may now come to the conclusion that it would be a good idea to remove all background noise from the `fused.ply` file using another tool (like [MeshLab](https://www.meshlab.net/)) before running the meshers on it (as I did).
@@ -38,12 +38,12 @@ But - and this is where **ply-vis-chopper** finally comes into play - if you use
 
 **This is due to a dependency between that mysterious `fused.ply.vis` and the `fused.ply` file.**
 
-The `vis` file simply keeps a list of all the images a point in the `fused.ply` can be seed from.
-The image lists are saved in the exact order the points appear on the `ply` file, so deleting any point in the `ply` will get those files out of sync and the `vis` file becomes useless.
+The `vis` file simply keeps a list of all the images a point in the `fused.ply` can be seen from.  
+The image lists are saved in the exact order the points appear in the `ply` file, so deleting any point in the `ply` will get those files out of sync and the `vis` file becomes useless.
 
 This is what **ply-vis-chopper** can fix … at least in some cases.
 
-What is does is comparing the points, their normals and their colors from your edited `fused.ply` with the original one (that means you need to keep the old one - don't overwrite it) and repositions the images lists in the output `vis` file.
+What it does is comparing the points, their normals and their colors from your edited `fused.ply` with the original one (that means you need to keep the old one - don't overwrite it) and repositions the image lists in the output `vis` file.
 
 **That means you may only delete points (or change their order), or the matching process will fail**
 
@@ -52,8 +52,8 @@ You may not scale, translate or move your model!
 
 ## How to run
 
-ply-vis-chopper is a command line binary.  
-But you don't need to compile anything.
+ply-vis-chopper is a command line binary,  
+but you don't need to compile anything.
 
 Instead just download a binary suitable for you operating system from the `/bin` folder of this project.
 
@@ -77,7 +77,7 @@ If it already exists, it will be overwritten.
 
 Please note that you will need to move the original `fused` files out of the way and rename the edited ones to `fused` afterwards.
 
-## But I WANT to compile
+## But I _want_ to compile
 
 That's ok.  
 The ply-vis-chopper has no dependencies.  
