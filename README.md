@@ -96,5 +96,5 @@ in most cases.
 I have a habit of coding end testing each and every part of what I do independently,  
 so I will never write a UI while I implement actual core functionality.
 
-I'm planning on writing a small GUI with [fyne](https://github.com/fyne-io/fyne), soon.  
+I'm planning to write a small GUI with [fyne](https://github.com/fyne-io/fyne), soon.  
 It _just_ needs to be done.
