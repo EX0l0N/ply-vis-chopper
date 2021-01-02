@@ -22,6 +22,8 @@ func select_file(w fyne.Window, ds fyne.Size, target file_label, write bool) {
 
 	if write {
 		d = dialog.NewFileSave(func(u fyne.URIWriteCloser, err error) {
+			w.SetFixedSize(false)
+			w.Resize(ds)
 			if err != nil || u == nil {
 				if err != nil {
 					dialog.ShowError(err, w)
@@ -29,12 +31,16 @@ func select_file(w fyne.Window, ds fyne.Size, target file_label, write bool) {
 				return
 			}
 			target.label.SetText(u.URI().Name())
+			if target.io != nil {
+				wc := target.io.(fyne.URIWriteCloser)
+				wc.Close()
+			}
 			target.io = u
-			w.SetFixedSize(false)
-			w.Resize(ds)
 		}, w)
 	} else {
 		d = dialog.NewFileOpen(func(u fyne.URIReadCloser, err error) {
+			w.SetFixedSize(false)
+			w.Resize(ds)
 			if err != nil || u == nil {
 				if err != nil {
 					dialog.ShowError(err, w)
@@ -42,9 +48,11 @@ func select_file(w fyne.Window, ds fyne.Size, target file_label, write bool) {
 				return
 			}
 			target.label.SetText(u.URI().Name())
+			if target.io != nil {
+				rc := target.io.(fyne.URIReadCloser)
+				rc.Close()
+			}
 			target.io = u
-			w.SetFixedSize(false)
-			w.Resize(ds)
 		}, w)
 	}
 
@@ -61,6 +69,14 @@ func main() {
 	fused_ply_vis := file_label{widget.NewLabel("No file selected."), nil}
 	edited_ply := file_label{widget.NewLabel("No file selected."), nil}
 	edited_ply_vis := file_label{widget.NewLabel("No file selected."), nil}
+	chop_button := &widget.Button{
+		Alignment: widget.ButtonAlignLeading,
+		Text:      "Chop it!",
+		Icon:      theme.ConfirmIcon(),
+		OnTapped:  nil,
+	}
+	chop_button.Disable()
+	progress := widget.NewProgressBar()
 
 	w.SetContent(
 		fyne.NewContainerWithLayout(layout.NewFormLayout(),
@@ -92,6 +108,8 @@ func main() {
 				OnTapped:  func() { select_file(w, default_size, edited_ply_vis, true) },
 			},
 			edited_ply_vis.label,
+			chop_button,
+			progress,
 		),
 	)
 
