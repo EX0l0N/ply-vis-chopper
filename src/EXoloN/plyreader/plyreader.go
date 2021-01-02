@@ -108,7 +108,7 @@ func parse_header(in *bufio.Reader) (ply_header, error) {
 					header.field_order = append(header.field_order, OPT_NZ)
 				default:
 					fmt.Println(line)
-					return header, errors.New("Uknown float property.")
+					return header, errors.New("Unknown float property.")
 				}
 			case "uchar":
 				switch line[2] {
