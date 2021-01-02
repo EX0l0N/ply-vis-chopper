@@ -3,6 +3,7 @@ package plyreader
 import (
 	"bufio"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -31,25 +32,31 @@ type ply_header struct {
 	field_order            []byte
 }
 
-func parse_header(in *bufio.Reader) ply_header {
+func parse_header(in *bufio.Reader) (ply_header, error) {
 	var checked_fields [REQ_FIELD_LEN]bool
 	var header ply_header
 	header.field_order = make([]byte, 0, REQ_FIELD_LEN-2)
 
-	tokens := func() []string {
+	tokens := func() ([]string, error) {
 		if txt, err := in.ReadString('\n'); err != nil {
-			panic(fmt.Sprint("Unable to get line: ", err))
+			return nil, fmt.Errorf("Unable to get line: %w", err)
 		} else {
-			return strings.Split(strings.TrimRight(txt, " \r\n"), " ")
+			return strings.Split(strings.TrimRight(txt, " \r\n"), " "), nil
 		}
 	}
 
-	if magic := tokens(); len(magic) != 1 || magic[0] != "ply" {
-		panic(fmt.Sprint("Magic line corrupted:", magic))
+	if magic, err := tokens(); err != nil || len(magic) != 1 || magic[0] != "ply" {
+		if err != nil {
+			return header, fmt.Errorf("Magic line corrupted: %w", magic)
+		}
+		return header, errors.New("Magic line corrupted.")
 	}
 
 	for run := true; run; {
-		line := tokens()
+		line, err := tokens()
+		if err != nil {
+			return header, err
+		}
 
 		switch line[0] {
 		case "comment":
@@ -59,14 +66,14 @@ func parse_header(in *bufio.Reader) ply_header {
 			if line[1] != "binary_little_endian" || line[2] != "1.0" {
 				fmt.Println(`Format needs to be exactly "binary_little_endian 1.0"`)
 				fmt.Printf("Got %q instead.", line[1:])
-				panic("Can't parse format")
+				return header, errors.New("Can't parse format")
 			}
 		case "element":
 			if line[1] == "vertex" {
 				checked_fields[REQ_VERTEX] = true
 				fmt.Print("Parsing vertex count: ")
 				if i, err := strconv.ParseInt(line[2], 10, 64); err != nil {
-					panic(err)
+					return header, err
 				} else {
 					header.num_vertices = i
 				}
@@ -101,7 +108,7 @@ func parse_header(in *bufio.Reader) ply_header {
 					header.field_order = append(header.field_order, OPT_NZ)
 				default:
 					fmt.Println(line)
-					panic("Uknown float property.")
+					return header, errors.New("Uknown float property.")
 				}
 			case "uchar":
 				switch line[2] {
@@ -121,20 +128,20 @@ func parse_header(in *bufio.Reader) ply_header {
 					fmt.Println("Please note that alpha values will be ignored.")
 				default:
 					fmt.Println(line)
-					panic("Unknown uchar property.")
+					return header, errors.New("Unknown uchar property.")
 				}
 			case "list":
 				fmt.Printf("Ignoring unknown porperty list %q.\n", line)
 			default:
 				fmt.Println(line)
-				panic("Can't read that.")
+				return header, errors.New("Can't read that.")
 			}
 		case "end_header":
 			fmt.Println("That's it. From now on I expect binary data.")
 			run = false
 		default:
 			fmt.Println(line)
-			panic("Can't read that.")
+			return header, errors.New("Can't read that.")
 		}
 
 	}
@@ -149,14 +156,14 @@ func parse_header(in *bufio.Reader) ply_header {
 		checked_fields[REQ_BLUE]) {
 
 		fmt.Println(checked_fields)
-		panic("Did not see all the required fields in header. Giving up.")
+		return header, errors.New("Did not see all the required fields in header. Giving up.")
 	}
 
 	if header.has_normals && !(checked_fields[OPT_NX] && checked_fields[OPT_NY] && checked_fields[OPT_NZ]) {
-		panic("If normals are used than they need to exist for all three dimensions.")
+		return header, errors.New("If normals are used than they need to exist for all three dimensions.")
 	}
 
-	return header
+	return header, nil
 }
 
 type colors struct {
@@ -247,34 +254,35 @@ func (pc pointcloud) GetPosition(p interface{}) (int, bool) {
 	return -1, false
 }
 
-func read_pointcloud(in *bufio.Reader, header ply_header) pointcloud {
+func read_pointcloud(in *bufio.Reader, header ply_header) (pointcloud, error) {
 	var pc pointcloud
 
 	pc.hasher = make(map[positions]int)
 	pc.points = make([]point, int(header.num_vertices))
 
-	read_float32 := func() float32 {
+	read_float32 := func() (float32, error) {
 		var f float32
 
 		if err := binary.Read(in, binary.LittleEndian, &f); err != nil {
-			panic(fmt.Sprint("binary.Read failed:", err))
+			return 0, fmt.Errorf("binary.Read failed: %w", err)
 		}
 
-		return f
+		return f, nil
 	}
 
-	read_byte := func() byte {
+	read_byte := func() (byte, error) {
 		var b byte
 
 		if err := binary.Read(in, binary.LittleEndian, &b); err != nil {
-			panic(fmt.Sprint("binary.Read failed:", err))
+			return 0, fmt.Errorf("binary.Read failed: %w", err)
 		}
 
-		return b
+		return b, nil
 	}
 
 	for c := range pc.points {
 		var p point
+		var err error
 
 		if header.has_normals {
 			p = new(colordata_with_normals)
@@ -285,29 +293,37 @@ func read_pointcloud(in *bufio.Reader, header ply_header) pointcloud {
 		for i := 0; i < len(header.field_order); i++ {
 			switch header.field_order[i] {
 			case REQ_X:
-				p.get_pos().x = read_float32()
+				p.get_pos().x, err = read_float32()
 			case REQ_Y:
-				p.get_pos().y = read_float32()
+				p.get_pos().y, err = read_float32()
 			case REQ_Z:
-				p.get_pos().z = read_float32()
+				p.get_pos().z, err = read_float32()
 			case REQ_RED:
-				p.get_col().r = read_byte()
+				p.get_col().r, err = read_byte()
 			case REQ_GREEN:
-				p.get_col().g = read_byte()
+				p.get_col().g, err = read_byte()
 			case REQ_BLUE:
-				p.get_col().b = read_byte()
+				p.get_col().b, err = read_byte()
 			case REQ_ALPHA:
-				if d, err := (*in).Discard(1); err != nil || d != 1 {
-					panic("Unable to discard one byte.")
+				if d, e := (*in).Discard(1); err != nil || d != 1 {
+					if e != nil {
+						err = fmt.Errorf("Unable to discard one byte: %w", e)
+					} else {
+						err = errors.New("Unable to discard one byte.")
+					}
 				}
 			case OPT_NX:
-				p.get_norm().nx = read_float32()
+				p.get_norm().nx, err = read_float32()
 			case OPT_NY:
-				p.get_norm().ny = read_float32()
+				p.get_norm().ny, err = read_float32()
 			case OPT_NZ:
-				p.get_norm().nz = read_float32()
+				p.get_norm().nz, err = read_float32()
 			default:
-				panic("Wrong use of field order.")
+				err = errors.New("Wrong use of field order.")
+			}
+
+			if err != nil {
+				return pc, err
 			}
 
 			pc.hasher[*p.get_pos()] = c
@@ -315,13 +331,16 @@ func read_pointcloud(in *bufio.Reader, header ply_header) pointcloud {
 		}
 	}
 
-	return pc
+	return pc, nil
 }
 
-func ReadPLY(file io.Reader) pointcloud {
+func ReadPLY(file io.Reader) (pointcloud, error) {
 	br := bufio.NewReader(file)
 
-	head := parse_header(br)
+	head, err := parse_header(br)
+	if err != nil {
+		return pointcloud{}, err
+	}
 
 	return read_pointcloud(br, head)
 }
