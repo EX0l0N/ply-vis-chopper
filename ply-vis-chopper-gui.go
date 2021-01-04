@@ -22,7 +22,6 @@ func select_file(w fyne.Window, ds fyne.Size, target file_label, write bool) {
 
 	if write {
 		d = dialog.NewFileSave(func(u fyne.URIWriteCloser, err error) {
-			w.SetFixedSize(false)
 			w.Resize(ds)
 			if err != nil || u == nil {
 				if err != nil {
@@ -39,7 +38,6 @@ func select_file(w fyne.Window, ds fyne.Size, target file_label, write bool) {
 		}, w)
 	} else {
 		d = dialog.NewFileOpen(func(u fyne.URIReadCloser, err error) {
-			w.SetFixedSize(false)
 			w.Resize(ds)
 			if err != nil || u == nil {
 				if err != nil {
@@ -63,7 +61,7 @@ func select_file(w fyne.Window, ds fyne.Size, target file_label, write bool) {
 func main() {
 	a := app.New()
 	w := a.NewWindow("ply-vis-chopper")
-	default_size := fyne.NewSize(640, 0)
+	default_size := fyne.NewSize(640, 200)
 
 	fused_ply := file_label{widget.NewLabel("No file selected."), nil}
 	fused_ply_vis := file_label{widget.NewLabel("No file selected."), nil}
@@ -114,7 +112,6 @@ func main() {
 	)
 
 	w.Resize(default_size)
-	w.SetFixedSize(true)
 
 	w.ShowAndRun()
 }
