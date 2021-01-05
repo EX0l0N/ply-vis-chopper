@@ -168,11 +168,11 @@ func main() {
 		Icon:      theme.ConfirmIcon(),
 	}
 	chop_button.OnTapped = func() {
+		chop_button.Disable()
 		progress.SetValue(0)
 		chop_it(file_labels, progress, w)
 		clean_fl(file_labels)
 		f_reg.clean()
-		chop_button.Disable()
 		progress.SetValue(1)
 	}
 	chop_button.Disable()
