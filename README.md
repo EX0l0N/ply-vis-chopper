@@ -57,6 +57,13 @@ but you don't need to compile anything.
 
 Instead just download a binary suitable for you operating system from the `/bin` folder of this project.
 
+### There are command line binaries for:
+
+- [macos-amd64](../../raw/main/bin/macos-amd64/ply-vis-chopper)
+- [linux-amd64](../../raw/main/bin/linux-amd64/ply-vis-chopper)
+- [linux-arm](../../raw/main/bin/linux-arm/ply-vis-chopper)
+- [windows-amd64](../../raw/main/bin/windows-amd64/ply-vis-chopper.exe)
+
 The binary takes exactly four parameters.
 Failure to provide these parameters will make the tool bark out debug info to your terminal at the moment.
 
@@ -77,24 +84,30 @@ If it already exists, it will be overwritten.
 
 Please note that you will need to move the original `fused` files out of the way and rename the edited ones to `fused` afterwards.
 
+### And there is even a rudimentary GUI:
+
+![](../../raw/main/img/gui.png)
+
+- [macos-amd64](../../raw/main/bin/macos-amd64/ply-vis-chopper-gui)
+- [linux-amd64](../../raw/main/bin/linux-amd64/ply-vis-chopper-gui)
+- [windows-amd64](../../raw/main/bin/windows-amd64/ply-vis-chopper-gui.exe)
+
 ## But I _want_ to compile
 
 That's ok.  
-The ply-vis-chopper has no dependencies.  
-You just need to make your `$GOPATH` point to the projects folder and then build.
+The `ply-vis-chopper` has no dependencies.
+
+( In case of the GUI version you will need to
+
+- fetch [fyne](https://fyne.io/): `go get fyne.io/fyne`.  
+- have a `C` compiler installed for your OS to glue the GL bindings )
+
+Besides that, you need to make your `$GOPATH` point to the projects folder and then build.
 
 This will be
 
 ```
 export GOPATH=$PWD
-go build ply-vis-chopper.go
+go build ply-vis-chopper(-gui).go
 ```
 in most cases.
-
-## What about a GUI?
-
-I have a habit of coding end testing each and every part of what I do independently,  
-so I will never write a UI while I implement actual core functionality.
-
-I'm planning to write a small GUI with [fyne](https://github.com/fyne-io/fyne), soon.  
-It _just_ needs to be done.
