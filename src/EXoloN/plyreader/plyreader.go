@@ -47,9 +47,9 @@ func parse_header(in *bufio.Reader) (ply_header, error) {
 
 	if magic, err := tokens(); err != nil || len(magic) != 1 || magic[0] != "ply" {
 		if err != nil {
-			return header, fmt.Errorf("Magic line corrupted: %w", magic)
+			return header, fmt.Errorf("Magic line corrupted: %w", err)
 		}
-		return header, errors.New("Magic line corrupted.")
+		return header, fmt.Errorf("Magic line corrupted: %v", magic)
 	}
 
 	for run := true; run; {
